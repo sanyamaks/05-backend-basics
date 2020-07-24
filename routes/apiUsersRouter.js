@@ -1,18 +1,47 @@
-const apiUsersRouter = require("express").Router();
-const users = require("../data/users.json");
+const apiUsersRouter = require('express').Router();
+const fs = require('fs');
+const path = require('path');
 
-apiUsersRouter.get("/users", (req, res) => {
-  res.send(users);
+apiUsersRouter.get('/users', (req, res) => {
+  const usersPath = path.join(__dirname, '..', 'data', 'users.json');
+  const usersReadFilePromises = fs.promises.readFile(usersPath, {
+    encoding: 'utf8',
+  });
+  usersReadFilePromises
+    .then((data) => {
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+      });
+      res.end(data);
+    })
+    .catch(() => {
+      res.status(404).send({ message: 'Internal Server Error' });
+    });
 });
 
-apiUsersRouter.get("/users/:id", (req, res) => {
-  const user = users.filter(user => user._id === req.params.id);
-  if (user.length === 0) {
-    res.send({ message: "Нет пользователя с таким id" });
-    return;
-  }
-
-  res.send(user);
+apiUsersRouter.get('/users/:id', (req, res) => {
+  const usersPath = path.join(__dirname, '..', 'data', 'users.json');
+  const usersReadFilePromises = fs.promises.readFile(usersPath, {
+    encoding: 'utf8',
+  });
+  usersReadFilePromises
+    .then((users) => JSON.parse(users).filter((item) => item._id === req.params.id))
+    .then((searchedUser) => {
+      if (searchedUser.length === 0) {
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+        });
+        res.end(JSON.stringify({ message: 'Нет пользователя с таким id' }));
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+      });
+      res.end(JSON.stringify(searchedUser));
+    })
+    .catch(() => {
+      res.status(404).send({ message: 'Internal Server Error' });
+    });
 });
 
 module.exports = apiUsersRouter;
